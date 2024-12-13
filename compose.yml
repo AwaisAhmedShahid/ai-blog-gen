@@ -1,0 +1,21 @@
+services:
+  ai-blog-post:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+    env_file:
+      - .env
+    ports:
+      - 8081:3000
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.blog-template-app-https.rule=HostRegexp(`^.+blog-app\.ailabapp\.com$`)
+      - traefik.http.routers.blog-template-app-https.entryPoints=https
+      - traefik.http.routers.blog-template-app-https.middlewares=gzip
+      - traefik.http.routers.blog-template-app-https.service=blogtemplateapp
+      - traefik.http.services.blogtemplateapp.loadbalancer.server.port=3000
+      - traefik.http.routers.blog-template-apps.tls=true
+      - traefik.http.routers.blog-template-app-http.tls.certresolver=letsencrypt
+      - traefik.http.routers.blog-template-app-http.rule=HostRegexp(`^.+blog-app\.ailabapp\.com$`)
+      - traefik.http.routers.blog-template-app-http.entryPoints=http
+      - traefik.http.routers.blog-template-app-http.middlewares=redirect-to-https
