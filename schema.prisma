@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Author {
+  id         String      @id 
+  firstName  String
+  lastName   String
+  profilePic String
+  email      String
+  appId      String
+  Tag        Tag[]
+  blogs      Blogs[]
+  Schedular  Schedular[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+  @@unique([id, appId])
+}
+
+model Blogs {
+  id             String        @id @default(uuid())
+  status         BlogStatus    @default(DRAFT)
+  title          String
+  content        String        @db.Text
+  tags           Tag[]
+  appId          String
+  metaTitle      String
+  description    String
+  coverImage     String
+  coverImageAlt  String
+  images         String[]
+  views          Int           @default(0)
+  schedularTag   SchedularTag? @relation(fields: [schedularTagId], references: [id])
+  schedularTagId String?
+  author         Author        @relation(fields: [authId], references: [id])
+  authId         String
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  @@unique([title, createdAt])
+}
+
+model Tag {
+  id       String  @id @default(uuid())
+  isActive Boolean @default(true)
+  title    String  @unique
+  author   Author  @relation(fields: [authId], references: [id])
+  authId   String
+  appId    String
+  blogs    Blogs[]
+
+  createdAt    DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime       @default(now()) @db.Timestamptz(6)
+  SchedularTag SchedularTag[]
+}
+
+model Localization {
+  lang String @id
+  json Json
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model Schedular {
+  id         String          @id @default(uuid())
+  author     Author          @relation(fields: [authId], references: [id])
+  authId     String
+  appId      String
+  status     SchedularStatus @default(PENDING)
+  tags       SchedularTag[]
+  length     Int             @default(500)
+  lastTagIdx Int             @default(-1)
+
+  frequency SchedularFrequency
+  startDate DateTime           @db.Timestamptz(6)
+  endDate   DateTime           @db.Timestamptz(6)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model SchedularTag {
+  id          String    @id @default(uuid())
+  schedular   Schedular @relation(fields: [schedularId], references: [id])
+  tag         Tag       @relation(fields: [tagId], references: [id])
+  focusTopic  String
+  tagId       String
+  schedularId String
+  updatedAt   DateTime  @default(now()) @db.Timestamptz(6)
+  blogs       Blogs[]
+}
+
+enum BlogStatus {
+  PUBLISHED
+  DRAFT
+  DELETED
+  ARCHIVED
+}
+
+enum SchedularStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum SchedularFrequency {
+  DAILY
+  BI_WEEKLY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}

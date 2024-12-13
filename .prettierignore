@@ -1,0 +1,7 @@
+# Add files here to ignore them from prettier formatting
+/dist
+.nx
+.plasmo
+node_modules
+temp
+.prisma
